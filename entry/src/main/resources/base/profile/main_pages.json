@@ -1,6 +1,7 @@
 {
   "src": [
     "pages/Index",
-    "pages/mvi/Index"
+    "pages/mvi/v1/Index",
+    "pages/mvi/v2/Index"
   ]
 }

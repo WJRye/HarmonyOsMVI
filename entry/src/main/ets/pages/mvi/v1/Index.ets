@@ -7,12 +7,12 @@ import {
   WeatherViewModel,
   WeatherViewState
 } from './viewmodel/WeatherViewModel';
-import { CityCodeInfo, Forecast, Weather } from './data/WeatherAPIModel';
+import { CityCodeInfo, Forecast, Weather } from '../data/WeatherAPIModel';
 
-export const ROUTE_NAME_MVI = "pages/mvi/Index"
+export const ROUTE_NAME_MVI_V1 = "pages/mvi/v1/Index"
 
 
-@Entry({ routeName: ROUTE_NAME_MVI })
+@Entry({ routeName: ROUTE_NAME_MVI_V1 })
 @Component
 struct Index {
   @Provide weatherViewModel: WeatherViewModel = new WeatherViewModel()

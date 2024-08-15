@@ -1,9 +1,9 @@
-import { WeatherData } from '../data/WeatherAPIModel';
-import { WeatherRepository } from '../data/WeatherRepository';
+import { WeatherData } from '../../data/WeatherAPIModel';
+import { WeatherRepository } from '../../data/WeatherRepository';
 import { Context } from '@kit.AbilityKit';
 import { Subscription } from 'rxjs';
 
-export class ViewIntent {
+class ViewIntent {
 }
 
 /**
@@ -30,7 +30,7 @@ export class CityWeatherIntent extends ViewIntent {
   }
 }
 
-@Observed
+@ObservedV2
 export class ViewState<T> {
   readonly data: T | undefined
 
@@ -39,22 +39,22 @@ export class ViewState<T> {
   }
 }
 
-@Observed
+@ObservedV2
 export class Init extends ViewState<WeatherData> {
 }
 
-@Observed
+@ObservedV2
 export class Loading extends ViewState<WeatherData> {
 }
 
-@Observed
+@ObservedV2
 export class Success extends ViewState<WeatherData> {
   constructor(data: WeatherData) {
     super(data)
   }
 }
 
-@Observed
+@ObservedV2
 export class Failure extends ViewState<WeatherData> {
   readonly code: number
   readonly message: string
@@ -73,9 +73,10 @@ export type WeatherViewState = Success | Failure | Init | Loading
 export type WeatherViewIntent = CityCodeInfoIntent | CityWeatherIntent
 
 
+@ObservedV2
 export abstract class ObservedData<T> {
   /*View 只有读取 ViewModel 返回的状态权限*/
-  private _value: T
+  @Trace private _value: T
 
   protected constructor(value: T) {
     this._value = value;
@@ -95,7 +96,7 @@ export abstract class ObservedData<T> {
 /**
  * 可观察的天气状态
  */
-@Observed
+@ObservedV2
 class WeatherObservedData extends ObservedData<WeatherViewState> {
   constructor(value: WeatherViewState) {
     super(value)
@@ -118,6 +119,8 @@ export class WeatherViewModel {
   private readonly _cityWeatherViewState: WeatherObservedData = new WeatherObservedData(new Init())
   /*城市天气状态，View 读状态*/
   readonly cityWeatherViewState: ObservedData<WeatherViewState> = this._cityWeatherViewState
+  /**/
+  private cityWeatherSubscription: Subscription | undefined = undefined
 
   sendUIIntent(intent: WeatherViewIntent) {
     if (intent instanceof CityCodeInfoIntent) {
@@ -140,7 +143,7 @@ export class WeatherViewModel {
 
   private handleCityWeatherIntent(intent: CityWeatherIntent) {
     this._cityWeatherViewState.updateValue(new Loading())
-    this.weatherRepository.fetchWeather(intent.cityCode).subscribe({
+    this.cityWeatherSubscription = this.weatherRepository.fetchWeather(intent.cityCode).subscribe({
       next: (value) => {
         this._cityWeatherViewState.updateValue(new Success(value))
       }, error: (msg: string) => {
@@ -151,5 +154,6 @@ export class WeatherViewModel {
 
   onCleared() {
     this.cityCodeInfoSubscription?.unsubscribe()
+    this.cityWeatherSubscription?.unsubscribe()
   }
 }
