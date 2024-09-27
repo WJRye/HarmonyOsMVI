@@ -1,7 +1,7 @@
 import { AxiosResponse } from '@ohos/axios'
 import { AxiosHelper } from './AxiosHelper'
 import { CityCodeInfo, Weather } from './WeatherAPIModel'
-import { Observable } from 'rxjs'
+import { delay, Observable } from 'rxjs'
 import { util } from '@kit.ArkTS'
 
 export class WeatherRepository {
@@ -23,7 +23,7 @@ export class WeatherRepository {
    * @returns 城市天气
    */
   fetchWeather(code: string): Observable<Weather> {
-    return new Observable((subscribe) => {
+    return new Observable<Weather>((subscribe) => {
       if (this.cachedWeather.has(code)) {
         subscribe.next(this.cachedWeather.get(code))
         subscribe.complete()
@@ -40,14 +40,14 @@ export class WeatherRepository {
       }).catch((e: Error) => {
         subscribe.error(e.message)
       })
-    })
+    }).pipe(delay(16))//Observed的数据更新过快，会导致观察不到。具体原因还没有来得及查找。所以这里delay 16毫秒
   }
 
   /**
    * 加载 raw 文件中城市码
    */
   loadCityCodeInfo(context: Context): Observable<Array<CityCodeInfo>> {
-    return new Observable((subscribe) => {
+    return new Observable<Array<CityCodeInfo>>((subscribe) => {
       context.resourceManager.getRawFileContent('city_code.json').then((rawFile) => {
         const textDecoder = util.TextDecoder.create('utf-8', { ignoreBOM: true })
         const rawFileString = textDecoder.decodeWithStream(rawFile, { stream: false })
